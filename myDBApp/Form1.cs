@@ -112,18 +112,21 @@ namespace DBAppIntellect
             DataTable dt;
 
             timer2.Enabled = true; //Start Timer
-                                   //https://msdn.microsoft.com/ru-ru/library/system.data.sqlclient.sqlconnection.connectionstring(v=vs.110).aspx
-                                   //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=vitl;Password=Cfkfprb1089;Connect Timeout=60";
+            //https://msdn.microsoft.com/ru-ru/library/system.data.sqlclient.sqlconnection.connectionstring(v=vs.110).aspx
+            //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=dfsgdfg;Password=sdfsdf;Connect Timeout=60";
 
             if (ServerName.Length == 0)
             { ServerName = comboBoxServers.Text; }
 
-            if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura"))
+            logger.Info("Выбран " + ServerName);
+            StatusLabel2.Text = "Выбран " + ServerName;
+
+            try
             {
-                connection = @"Data Source=" + ServerName + ";Initial Catalog=EBP" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-                try
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura"))
                 {
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=EBP" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
+                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
                         dbCon.Open();
@@ -133,20 +136,12 @@ namespace DBAppIntellect
                         { list.Add(r[0].ToString()); }
                         dbCon.Close();
                     }
+
                 }
-                catch (Exception expt)
+                else if (ServerType == "MSSQL")
                 {
-                    MessageBox.Show("Проверьте имя сервера/пользователя/пароль:\nСервер - " +
-                      ServerName + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
-                      "\n-----------------------" + "\n" + expt.ToString());
-                }
-            }
-            else if (ServerType == "MSSQL")
-            {
-                connection = @"Data Source=" + ServerName + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-                try
-                {
+                    connection = @"Data Source=" + ServerName + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
+                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
                         dbCon.Open();
@@ -156,22 +151,12 @@ namespace DBAppIntellect
                         { list.Add(r[0].ToString()); }
                         dbCon.Close();
                     }
-                }
-                catch (Exception expt)
-                {
-                    logger.Warn("Проверьте имя сервера/пользователя пароль: cервер и его тип - " + ServerName + " " + ServerType + "Логин - " + UserLogin + "Пароль - " + UserPassword);
 
-                    MessageBox.Show("Проверьте имя сервера/пользователя/пароль:\nСервер и его тип - " +
-                      ServerName + " " + ServerType + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
-                      "\n-----------------------" + "\n" + expt.ToString());
                 }
-            }
-            else if (ServerType == "SQLEXPRESS")
-            {
-                connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-                try
+                else if (ServerType == "SQLEXPRESS")
                 {
+                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
+                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
                         dbCon.Open();
@@ -181,24 +166,15 @@ namespace DBAppIntellect
                         { list.Add(r[0].ToString()); }
                         dbCon.Close();
                     }
-                }
-                catch (Exception expt)
-                {
-                    logger.Warn("Проверьте имя сервера/пользователя пароль: cервер и его тип - " + ServerName + " " + ServerType + "Логин - " + UserLogin + "Пароль - " + UserPassword);
-                    MessageBox.Show("Проверьте имя сервера/пользователя/пароль:\nСервер и его тип - " +
-                      ServerName + " " + ServerType + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
-                      "\n-----------------------" + "\n" + expt.ToString());
-                }
-            }
-            else if (ServerType == "MySQL")
-            {
-                //change connection to MySQL
-                connection = @"server=" + ServerName +  ";User=" + UserLogin + ";Password=" + UserPassword + ";database=mysql;Connect Timeout=5";
-                StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-                string query = "SELECT * FROM db where user='"+ UserLogin+"' and select_priv='Y'";
 
-                try
+                }
+                else if (ServerType == "MySQL")
                 {
+                    //change connection to MySQL
+                    connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=mysql;Connect Timeout=5";
+                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
+                    string query = "SELECT * FROM db where user='" + UserLogin + "' and select_priv='Y'";
+
                     using (MySql.Data.MySqlClient.MySqlConnection dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
                     {
                         dbCon.Open();
@@ -227,44 +203,44 @@ namespace DBAppIntellect
                     }
                     foreach (DataRow r in dt.Rows)
                     { list.Add(r[1].ToString()); }
+
                 }
-                catch (Exception expt)
-                {
-                    logger.Warn("Проверьте имя сервера/пользователя пароль: cервер и его тип - " + ServerName + " " + ServerType + "Логин - " + UserLogin + "Пароль - " + UserPassword);
-                    MessageBox.Show("Проверьте имя сервера/пользователя/пароль:\nСервер и его тип - " +
-                      ServerName + " " + ServerType + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
-                      "\n-----------------------" + "\n" + expt.ToString());
-                }
+            } catch (Exception expt)
+            {
+                logger.Warn("Проверьте имя сервера/пользователя пароль: cервер и его тип - " + ServerName + " " + ServerType + "Логин - " + UserLogin + "Пароль - " + UserPassword);
+                MessageBox.Show("Проверьте имя сервера/пользователя/пароль:\nСервер и его тип - " +
+                  ServerName + " " + ServerType + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
+                  "\n-----------------------" + "\n" + expt.ToString());
             }
-/*
-            
-          // using MySql.Data.MySqlClient.;
-            // строка подключения к БД
-            string connStr = "server=localhost;user=root;database=people;password=0000;";
-            // создаём объект для подключения к БД
-            MySql.Data.MySqlClient.MySqlConnection conn = new MySql.Data.MySqlClient.MySqlConnection(connStr);
-            // устанавливаем соединение с БД
-            conn.Open();
-            // запрос
-            string sql = "SELECT name FROM men WHERE id = 2";
-            // объект для выполнения SQL-запроса
-            MySql.Data.MySqlClient.MySqlCommand command = new MySql.Data.MySqlClient.MySqlCommand(sql, conn);
-            // выполняем запрос и получаем ответ
-            string name = command.ExecuteScalar().ToString();
-            // выводим ответ в консоль
-            Console.WriteLine(name);
-            // закрываем соединение с БД
-            conn.Close();*/
-           
-            comboBoxDBs.DataSource=list.ToArray();
-            
+            /*
+
+                      // using MySql.Data.MySqlClient.;
+                        // строка подключения к БД
+                        string connStr = "server=localhost;user=root;database=people;password=0000;";
+                        // создаём объект для подключения к БД
+                        MySql.Data.MySqlClient.MySqlConnection conn = new MySql.Data.MySqlClient.MySqlConnection(connStr);
+                        // устанавливаем соединение с БД
+                        conn.Open();
+                        // запрос
+                        string sql = "SELECT name FROM men WHERE id = 2";
+                        // объект для выполнения SQL-запроса
+                        MySql.Data.MySqlClient.MySqlCommand command = new MySql.Data.MySqlClient.MySqlCommand(sql, conn);
+                        // выполняем запрос и получаем ответ
+                        string name = command.ExecuteScalar().ToString();
+                        // выводим ответ в консоль
+                        Console.WriteLine(name);
+                        // закрываем соединение с БД
+                        conn.Close();*/
+
+            comboBoxDBs.DataSource = list.ToArray();
+
             GetTables.Enabled = false;
             comboBoxTables.Enabled = false;
             button1.Enabled = false;
             comboBoxColumns.Enabled = false;
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
-            StatusLabel2.Text = "Выбран " + comboBoxServers.Text;
+
         }
 
         private void GetTables_Click(object sender, EventArgs e)
@@ -300,7 +276,6 @@ namespace DBAppIntellect
                     }
                     dbCon.Close();
                     comboBoxTables.SelectedIndex = 0;
-                    StatusLabel2.Text = "Список таблиц базы " + serverDB + " сервера " + ServerName + " успешно получены";
                 }
             }
             else if (ServerType == "SQLEXPRESS")
@@ -318,7 +293,6 @@ namespace DBAppIntellect
                     }
                     dbCon.Close();
                     comboBoxTables.SelectedIndex = 0;
-                    StatusLabel2.Text = "Список таблиц базы " + serverDB + " сервера " + ServerName + " успешно получены";
                 }
             }
             else if (ServerType == "MySQL")
@@ -343,6 +317,8 @@ namespace DBAppIntellect
                                     dt.Load(dr);
                                 }
                             }
+
+
                             /*
                             using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
                             {
@@ -355,7 +331,6 @@ namespace DBAppIntellect
 
                         }
 
-
                         dbCon.Close();
                     }
                 }
@@ -367,6 +342,7 @@ namespace DBAppIntellect
                 }
             }
 
+            StatusLabel2.Text = "Список таблиц базы " + serverDB + " сервера " + ServerName + " получен";
             comboBoxTables.DataSource = list.ToArray();
 
         }
@@ -417,13 +393,14 @@ namespace DBAppIntellect
                     comboBoxColumns.SelectedIndex = 0;
                 }
             }
-
+            logger.Info("Список столбцов таблицы " + serverDbTable + " для базы " + serverDB + " сервера " + ServerName + " успешно получены");
             StatusLabel2.Text = "Список столбцов таблицы " + serverDbTable + " для базы " + serverDB + " сервера " + ServerName + " успешно получены";
         }
 
         private void GetInfo_Click(object sender, EventArgs e)
         {
             serverDbTableColumn=comboBoxColumns.SelectedItem.ToString();
+            string query="";
             try
             {
                 //Next string - work!!!!
@@ -440,7 +417,7 @@ namespace DBAppIntellect
                     {
 
                         dbCon.Open();
-                        string query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " +serverDbTableColumn  + " LIKE '%" + textBoxQuery.Text + "%'";
+                        query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " +serverDbTableColumn  + " LIKE '%" + textBoxQuery.Text + "%'";
                         textBox2.AppendText("\n");
                         textBox2.AppendText("\nconn:" + connection);
                         textBox2.AppendText("\nquery: " + query);
@@ -454,8 +431,6 @@ namespace DBAppIntellect
                                 dataGridView1.DataSource = dt;
                             }
                         }
-                        StatusLabel2.Text = "Данные с " + comboBoxServers.SelectedItem.ToString() + " успешно получены";
-                        timer1.Enabled = false; //Stop Timer
                     }
                 }
                 else if (ServerType == "SQLEXPRESS")
@@ -466,25 +441,28 @@ namespace DBAppIntellect
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
                         dbCon.Open();
-                        string query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + textBoxQuery.Text + "%'";
+                        query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + textBoxQuery.Text + "%'";
                         textBox2.AppendText("\n");
                         textBox2.AppendText("\nconn:" + connection);
                         textBox2.AppendText("\nquery: " + query);
                         textBox2.AppendText("\n");
                         System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, dbCon);
                         System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(cmd);
+
                         DataTable dt = new DataTable();
                         da.Fill(dt);
                         dataGridView1.DataSource = dt;
                         dbCon.Close();
-                        //                dbCon.Dispose();
-                        StatusLabel2.Text = "Данные с " + comboBoxServers.SelectedItem.ToString() + " успешно получены";
-                        timer1.Enabled = false; //Stop Timer
                     }
                 }
             }
             catch (Exception Expt)
             { MessageBox.Show(Expt.Message, comboBoxServers.SelectedItem.ToString() + " не доступен или неправильная авторизация", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+
+            timer1.Enabled = false; //Stop Timer
+
+            StatusLabel2.Text = "Данные с " + comboBoxServers.SelectedItem.ToString() + " успешно получены";
+            logger.Info("Выполнен запрос " + query);
         }
 
         private void buttonGettFullInfo_Click(object sender, EventArgs e)
