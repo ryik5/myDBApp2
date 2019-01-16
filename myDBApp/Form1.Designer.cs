@@ -37,7 +37,7 @@
             this.GetTables = new System.Windows.Forms.Button();
             this.comboBoxTables = new System.Windows.Forms.ComboBox();
             this.comboBoxColumns = new System.Windows.Forms.ComboBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.buttonColumns = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.buttonAbout = new System.Windows.Forms.Button();
             this.buttonAuthorize = new System.Windows.Forms.Button();
@@ -55,6 +55,7 @@
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.labelDebugger = new System.Windows.Forms.Label();
+            this.buttonSort = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -102,7 +103,7 @@
             this.GetRows.Name = "GetRows";
             this.GetRows.Size = new System.Drawing.Size(75, 23);
             this.GetRows.TabIndex = 4;
-            this.GetRows.Text = "Get Info";
+            this.GetRows.Text = "Get Rows";
             this.toolTip1.SetToolTip(this.GetRows, "Получить отфильтрованный список таблиз выбранной базы выбранной таблицы");
             this.GetRows.UseVisualStyleBackColor = true;
             this.GetRows.Click += new System.EventHandler(this.GetInfo_Click);
@@ -145,19 +146,19 @@
             this.comboBoxColumns.Text = "Колонки:";
             this.comboBoxColumns.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
-            // button1
+            // buttonColumns
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.PaleGreen;
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Location = new System.Drawing.Point(843, 126);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(84, 23);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "Get Collumns";
-            this.toolTip1.SetToolTip(this.button1, "Получить список колонок выбранной базы");
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.GetColumns_Click);
+            this.buttonColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonColumns.FlatAppearance.MouseOverBackColor = System.Drawing.Color.PaleGreen;
+            this.buttonColumns.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonColumns.Location = new System.Drawing.Point(843, 126);
+            this.buttonColumns.Name = "buttonColumns";
+            this.buttonColumns.Size = new System.Drawing.Size(84, 23);
+            this.buttonColumns.TabIndex = 8;
+            this.buttonColumns.Text = "Get Columns";
+            this.toolTip1.SetToolTip(this.buttonColumns, "Получить список колонок выбранной базы");
+            this.buttonColumns.UseVisualStyleBackColor = true;
+            this.buttonColumns.Click += new System.EventHandler(this.GetColumns_Click);
             // 
             // buttonAbout
             // 
@@ -192,7 +193,7 @@
             this.buttonGetAllRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonGetAllRows.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SandyBrown;
             this.buttonGetAllRows.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonGetAllRows.Location = new System.Drawing.Point(843, 191);
+            this.buttonGetAllRows.Location = new System.Drawing.Point(843, 225);
             this.buttonGetAllRows.Name = "buttonGetAllRows";
             this.buttonGetAllRows.Size = new System.Drawing.Size(106, 23);
             this.buttonGetAllRows.TabIndex = 18;
@@ -206,7 +207,7 @@
             this.buttonReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonReset.FlatAppearance.MouseOverBackColor = System.Drawing.Color.SandyBrown;
             this.buttonReset.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonReset.Location = new System.Drawing.Point(975, 191);
+            this.buttonReset.Location = new System.Drawing.Point(975, 225);
             this.buttonReset.Name = "buttonReset";
             this.buttonReset.Size = new System.Drawing.Size(108, 23);
             this.buttonReset.TabIndex = 19;
@@ -301,27 +302,42 @@
             // 
             this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox2.Location = new System.Drawing.Point(843, 233);
+            this.textBox2.Location = new System.Drawing.Point(843, 282);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(240, 320);
+            this.textBox2.Size = new System.Drawing.Size(240, 271);
             this.textBox2.TabIndex = 16;
             // 
             // labelDebugger
             // 
             this.labelDebugger.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelDebugger.AutoSize = true;
-            this.labelDebugger.Location = new System.Drawing.Point(840, 217);
+            this.labelDebugger.Location = new System.Drawing.Point(840, 259);
             this.labelDebugger.Name = "labelDebugger";
             this.labelDebugger.Size = new System.Drawing.Size(57, 13);
             this.labelDebugger.TabIndex = 17;
             this.labelDebugger.Text = "Debugger:";
+            // 
+            // buttonSort
+            // 
+            this.buttonSort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSort.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Gainsboro;
+            this.buttonSort.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonSort.Location = new System.Drawing.Point(843, 192);
+            this.buttonSort.Name = "buttonSort";
+            this.buttonSort.Size = new System.Drawing.Size(240, 23);
+            this.buttonSort.TabIndex = 20;
+            this.buttonSort.Text = "Change the kind of Direction";
+            this.toolTip1.SetToolTip(this.buttonSort, "Изменить направление сортировки по выбранному столбцу");
+            this.buttonSort.UseVisualStyleBackColor = true;
+            this.buttonSort.Click += new System.EventHandler(this.buttonSort_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1088, 578);
+            this.Controls.Add(this.buttonSort);
             this.Controls.Add(this.buttonReset);
             this.Controls.Add(this.buttonGetAllRows);
             this.Controls.Add(this.labelDebugger);
@@ -332,7 +348,7 @@
             this.Controls.Add(this.comboBoxServers);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.comboBoxColumns);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.buttonColumns);
             this.Controls.Add(this.comboBoxTables);
             this.Controls.Add(this.GetTables);
             this.Controls.Add(this.GetRows);
@@ -361,7 +377,7 @@
         private System.Windows.Forms.Button GetTables;
         private System.Windows.Forms.ComboBox comboBoxTables;
         private System.Windows.Forms.ComboBox comboBoxColumns;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button buttonColumns;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.StatusStrip statusStrip1;
@@ -379,6 +395,7 @@
         private System.Windows.Forms.ToolStripSplitButton SplitButton1;
         private System.Windows.Forms.Button buttonGetAllRows;
         private System.Windows.Forms.Button buttonReset;
+        private System.Windows.Forms.Button buttonSort;
     }
 }
 
