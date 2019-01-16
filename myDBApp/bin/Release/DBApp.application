@@ -7,14 +7,14 @@
     <framework targetVersion="4.5.2" profile="Full" supportedRuntime="4.0.30319" />
   </compatibleFrameworks>
   <dependency>
-    <dependentAssembly dependencyType="install" codebase="DBApp.exe.manifest" size="7268">
+    <dependentAssembly dependencyType="install" codebase="DBApp.exe.manifest" size="7951">
       <assemblyIdentity name="DBApp.exe" version="1.0.1.5" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="msil" type="win32" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>V5QoOtQHa6EfK0B1mRBWw5ScdF7v6JocBRRj/eG/m8g=</dsig:DigestValue>
+        <dsig:DigestValue>o9rqRlwMy24Zm+DiIZUt3WvpO8PZQgBpvs7sDMfLpkc=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
