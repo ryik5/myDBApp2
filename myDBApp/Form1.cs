@@ -54,8 +54,10 @@ namespace DBAppIntellect
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
 
-            sortDirectionASC = true;
+            buttonSort.Text = "ASC";
             buttonSort.BackColor = System.Drawing.Color.PaleGreen;
+            toolTip1.SetToolTip(buttonSort, "Сортировка по возрастанию");
+            sortDirectionASC = true;
 
             string checkServerName = "";
             string checkServerType = "";
@@ -90,7 +92,19 @@ namespace DBAppIntellect
                     ServerType = checkServerType;
                     comboBoxServers.Items.Add(ServerName);
                     comboBoxServers.SelectedIndex = comboBoxServers.FindString(ServerName);
-                    ComboBoxServers_SelectedIndexChanged();
+
+                    GetTables.Enabled = true;
+                    comboBoxTables.Enabled = false;
+                    buttonColumns.Enabled = false;
+                    comboBoxColumns.Enabled = false;
+                    textBoxQuery.Enabled = false;
+                    GetRows.Enabled = false;
+                    timer1.Enabled = true; //Start Timer
+                    StatusLabel2.Text = "Выбран " + ServerName;
+
+                    GetTablesDb();
+
+                    //ComboBoxServers_SelectedIndexChanged();
                 }
             }
             else
@@ -106,7 +120,7 @@ namespace DBAppIntellect
             comboBoxServers.SelectedIndex = 0;
             comboBoxDBs.SelectedIndex = 0;
         }
-
+        
         private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
         { ComboBoxServers_SelectedIndexChanged(); }
 
@@ -226,7 +240,7 @@ namespace DBAppIntellect
         }*/
 
         }
-
+        
         private void GetTables_Click(object sender, EventArgs e)
         { GetTablesDb(); }
 
@@ -644,24 +658,22 @@ namespace DBAppIntellect
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GetColumnsDb();
             buttonColumns.Enabled = true;
             comboBoxColumns.Enabled = false;
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
 
+            GetColumnsDb();
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             textBoxQuery.Enabled = true;
             GetRows.Enabled = true;
-
         }
 
         private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GetTablesDb();
             GetTables.Enabled = true;
             comboBoxTables.Enabled = false;
             buttonColumns.Enabled = false;
@@ -670,6 +682,8 @@ namespace DBAppIntellect
             GetRows.Enabled = false;
             timer1.Enabled = true; //Start Timer
             StatusLabel2.Text = "Выбран " + ServerName;
+
+            GetTablesDb();
         }
 
         private void timer1_Tick(object sender, EventArgs e) //Change a Color of the Font on Status by the Timer
@@ -685,10 +699,6 @@ namespace DBAppIntellect
             else this.StatusLabel2.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void comboBox3_Click(object sender, EventArgs e)
-        {
-
-        }
         private void button2_Click(object sender, EventArgs e) //Кнопка "О программе"
         {
             DialogResult result = MessageBox.Show(
