@@ -223,6 +223,9 @@ namespace DBAppIntellect
         }
 
         private void GetTables_Click(object sender, EventArgs e)
+        {            GetTablesDb();        }
+
+        private void GetTablesDb()
         {
             HashSet<string> list = new HashSet<string>();
             DataTable dt = new DataTable();
@@ -309,6 +312,9 @@ namespace DBAppIntellect
         }
 
         private void GetColumns_Click(object sender, EventArgs e)
+        {            GetColumnsDb();        }
+
+        private void GetColumnsDb()
         {
             comboBoxColumns.Enabled = true;
             textBoxQuery.Enabled = false;
@@ -395,6 +401,9 @@ namespace DBAppIntellect
         }
 
         private void GetInfo_Click(object sender, EventArgs e)
+        {            GetInfoDb();        }
+
+        private void GetInfoDb()
         {
             timer2.Enabled = true;
 
@@ -494,6 +503,9 @@ namespace DBAppIntellect
         }
 
         private void buttonGettFullInfo_Click(object sender, EventArgs e)
+        {            GetFullInfoDb();        }
+
+        private void GetFullInfoDb()
         {
             timer2.Enabled = true;
 
@@ -528,7 +540,8 @@ namespace DBAppIntellect
                         using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
                         {
                             using (System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(cmd))
-                            { da.Fill(dt);
+                            {
+                                da.Fill(dt);
                             }
                         }
                     }
@@ -549,7 +562,8 @@ namespace DBAppIntellect
                         using (var cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
                         {
                             using (var da = new System.Data.SqlClient.SqlDataAdapter(cmd))
-                            { da.Fill(dt);
+                            {
+                                da.Fill(dt);
                             }
                         }
 
@@ -572,7 +586,8 @@ namespace DBAppIntellect
                         using (var cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
                         {
                             using (var da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                            { da.Fill(dt);
+                            {
+                                da.Fill(dt);
                             }
                         }
 
@@ -599,12 +614,16 @@ namespace DBAppIntellect
             comboBoxColumns.Enabled = false;
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
+
+            GetTablesDb();
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             textBoxQuery.Enabled = true;
             GetRows.Enabled = true;
+
+            GetColumnsDb();
         }
 
         private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
