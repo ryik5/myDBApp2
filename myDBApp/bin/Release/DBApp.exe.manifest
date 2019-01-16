@@ -44,14 +44,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DBApp.exe" size="311808">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DBApp.exe" size="312320">
       <assemblyIdentity name="DBApp" version="1.0.2.3" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>H3erjiC8ctVkQd3+zxjYirSXzeHkfr4NwItZGt8KSvw=</dsig:DigestValue>
+        <dsig:DigestValue>j9zesTNdLVb8cw0jnK0AaTrSQSKMJiRftyy6su+LksA=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
