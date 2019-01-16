@@ -400,6 +400,7 @@ namespace DBAppIntellect
 
             serverDbTableColumn = comboBoxColumns.SelectedItem.ToString();
             DataTable dt = new DataTable();
+            string txtbox = textBoxQuery.Text;
             string query = "";
 
             logger.Info("Запрашиваю данные таблицы " + serverDbTable + " базы " + serverDB + " сервера " + ServerName);
@@ -414,8 +415,8 @@ namespace DBAppIntellect
 
                 if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
-                    query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + textBoxQuery.Text + "%'";
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
@@ -434,8 +435,8 @@ namespace DBAppIntellect
                 }
                 else if (ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
-                    query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + textBoxQuery.Text + "%'";
+                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
@@ -456,8 +457,8 @@ namespace DBAppIntellect
                 }
                 else if (ServerType == "MySQL")
                 {
-                    connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";Connect Timeout=5";
-                    query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + textBoxQuery.Text + "%'";
+                    connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    query = "SELECT * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' LIMIT 100";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
@@ -470,7 +471,9 @@ namespace DBAppIntellect
                         using (var cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
                         {
                             using (var da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                            { da.Fill(dt); }
+                            {
+                                da.Fill(dt);
+                            }
                         }
 
                         dbCon.Close();
@@ -511,7 +514,7 @@ namespace DBAppIntellect
 
                 if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
                     query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
@@ -532,7 +535,7 @@ namespace DBAppIntellect
                 }
                 else if (ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
+                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
                     query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
@@ -555,7 +558,7 @@ namespace DBAppIntellect
                 }
                 else if (ServerType == "MySQL")
                 {
-                    connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";Connect Timeout=5";
+                    connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
                     query = "SELECT * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' LIMIT 10000";
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
