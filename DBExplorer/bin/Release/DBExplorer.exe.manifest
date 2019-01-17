@@ -44,14 +44,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DBExplorer.exe" size="317952">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="DBExplorer.exe" size="316416">
       <assemblyIdentity name="DBExplorer" version="1.1.9.5" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>bCgcFDfuNKBlqAsmicZAF0qW83HOTqfxFkoZsTQZMnM=</dsig:DigestValue>
+        <dsig:DigestValue>jMz79nhVHqcOTzV0hYutwndJJVbRiC+7mCg9O3riKp4=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

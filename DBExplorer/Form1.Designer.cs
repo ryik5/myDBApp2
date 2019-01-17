@@ -287,7 +287,7 @@
             this.comboBoxServers.Size = new System.Drawing.Size(126, 21);
             this.comboBoxServers.TabIndex = 12;
             this.comboBoxServers.Text = "Сервер:";
-            this.comboBoxServers.SelectedIndexChanged += new System.EventHandler(this.comboBox3_SelectedIndexChanged);
+            this.comboBoxServers.SelectedIndexChanged += new System.EventHandler(this.GetDBNames_SelectedIndexChanged);
             // 
             // comboBoxDBs
             // 

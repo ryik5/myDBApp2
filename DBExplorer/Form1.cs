@@ -44,6 +44,8 @@ namespace DBExplorer
             logger.Error("Test error message");
             logger.Fatal("Test fatal message");
 
+            //start point of datagrid
+            dataGridView1.DataSource = new System.Collections.ArrayList(); 
 
             myFileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Application.ExecutablePath);
             strVersion = myFileVersionInfo.Comments + " ver." + myFileVersionInfo.FileVersion + " " + myFileVersionInfo.LegalCopyright;
@@ -78,10 +80,9 @@ namespace DBExplorer
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
 
-            buttonSort.Text = "ASC";
-            buttonSort.BackColor = System.Drawing.Color.PaleGreen;
-            toolTip1.SetToolTip(buttonSort, "Сортировка по возрастанию");
-            sortDirectionASC = true;
+            buttonSort.Text = "Nothing";
+            toolTip1.SetToolTip(buttonSort, "Сортировка по упомлчанию");
+            buttonSort.BackColor = System.Drawing.SystemColors.Control;
 
             //The Start of The Block. for transfer any data between Form1 and Form2
             this.Hide();
@@ -119,8 +120,6 @@ namespace DBExplorer
                     comboBoxColumns.Enabled = false;
                     textBoxQuery.Enabled = false;
                     GetRows.Enabled = false;
-
-                    GetTablesDb();
                 }
                 logger.Info("Выбран " + ServerName);
                 StatusLabel2.Text = "Выбран " + ServerName;
@@ -147,95 +146,51 @@ namespace DBExplorer
             comboBoxDBs.SelectedIndex = 0;
         }
 
-        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)// ComboBoxServers_SelectedIndexChanged()
-        { ComboBoxServers_SelectedIndexChanged(); }
+        private void GetDBNames_SelectedIndexChanged(object sender, EventArgs e)// ComboBoxServers_SelectedIndexChanged()
+        {
+            comboBoxDBs.Items.Clear();
+            GetDBNames();
+        }
 
-        private void ComboBoxServers_SelectedIndexChanged()
+        private void GetDBNames()
         {
             HashSet<string> list = new HashSet<string>();
+            string[] str = new string[1];
             DataTable dt = new DataTable();
 
             if (ServerName.Length == 0)
-            { ServerName = comboBoxServers.Text; }
+            { ServerName = comboBoxServers.SelectedItem.ToString(); }
             StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
             logger.Info("Подключаюсь к серверу " + ServerName);
 
             try
             {
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura"))
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=EBP" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
+                    connection = @"Data Source=" + ServerName;
+                    if (ServerType == "SQLEXPRESS")
+                    { connection += "\\SQLEXPRESS"; }
+                    else { connection += ";Initial Catalog=EBP"; }
+                    connection += UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=10";
 
-                        dt = dbCon.GetSchema("Databases");
-                        foreach (DataRow r in dt.Rows)
-                        { list.Add(r[0].ToString()); }
-
-                        dbCon.Close();
-                    }
-                }
-                else if (ServerType == "MSSQL")
-                {
-                    connection = @"Data Source=" + ServerName + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        dt = dbCon.GetSchema("Databases");
-                        foreach (DataRow r in dt.Rows)
-                        { list.Add(r[0].ToString()); }
-
-                        dbCon.Close();
-                    }
-                }
-                else if (ServerType == "SQLEXPRESS")
-                {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=5";
-                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        dt = dbCon.GetSchema("Databases");
-                        foreach (DataRow r in dt.Rows)
-                        { list.Add(r[0].ToString()); }
-
-                        dbCon.Close();
-                    }
+                    list = GetSchemaMSSQLDB(connection, "Databases", "database_name");
                 }
                 else if (ServerType == "MySQL")
                 {
-                    //change connection to MySQL
                     connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=mysql;Connect Timeout=5";
-                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
                     string query = "SELECT * FROM db where user='" + UserLogin + "' and select_priv='Y'";
-
-                    using (MySql.Data.MySqlClient.MySqlConnection dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
-                        {
-                            using (MySql.Data.MySqlClient.MySqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    if (reader.GetString(0) != null && reader.GetString(0).Length > 0)
-                                    { list.Add(reader.GetString(1)); }
-                                }
-                            }
-                        }
-                        dbCon.Close();
-                    }
+                    list = GetSchemaMySqlDB(connection, query, 1);
                 }
+
+                comboBoxDBs.Items.AddRange(list.ToArray());
+
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura"))
+                { comboBoxDBs.SelectedIndex = comboBoxDBs.FindString("EBP"); }
+                else { comboBoxDBs.SelectedIndex = 0; }
+
 
                 logger.Info("Список баз сервера " + ServerName + " успешно получено");
                 StatusLabel2.Text = "Список баз сервера " + ServerName + " успешно получено";
-
-                comboBoxDBs.Items.AddRange(list.ToArray());
-                comboBoxDBs.SelectedIndex = 0;
 
                 GetTables.Enabled = false;
                 comboBoxTables.Enabled = false;
@@ -252,20 +207,76 @@ namespace DBExplorer
                   ServerName + " " + ServerType + "\nЛогин - " + UserLogin + "\nПароль - " + UserPassword +
                   "\n-----------------------" + "\n" + expt.ToString());
             }
+        }
 
-            /*
-               using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-               {
-               DataTable dt = new DataTable();
-             da.Fill(dt);
-             foreach (DataRow r in dt.Rows)
-          { list.Add(r[1].ToString()); }
-        }*/
+        private HashSet<string> GetSchemaColumnsMSSQLDB(string connectionString, string nameTable)
+        {
+            HashSet<string> list = new HashSet<string>();
+            DataTable dt = new DataTable();
+            logger.Info("nameTable: " + nameTable + " connectionString: " + connectionString);
 
+            using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connectionString))
+            {
+                dbCon.Open();
+                dt = dbCon.GetSchema("Columns", new[] { null, null, nameTable });
+                foreach (DataRow r in dt.Rows)
+                { list.Add(r["COLUMN_NAME"].ToString()); }
+                dbCon.Close();
+            }
+            dt = null;
+            return list;
+        }
+
+        private HashSet<string> GetSchemaMSSQLDB(string connectionString, string nameSchema, string nameColumn)
+        {
+            HashSet<string> list = new HashSet<string>();
+            DataTable dt = new DataTable();
+            logger.Info("nameSchema: " + nameSchema + " nameColumn: " + nameColumn + " connectionString: " + connectionString);
+
+            using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connectionString))
+            {
+                dbCon.Open();
+                dt = dbCon.GetSchema(nameSchema);
+                foreach (DataRow r in dt.Rows)
+                { list.Add(r[nameColumn].ToString()); }
+                dbCon.Close();
+            }
+            dt = null;
+            return list;
+        }
+
+        private HashSet<string> GetSchemaMySqlDB(string connectionString, string query, int indexColumn)
+        {
+            HashSet<string> list = new HashSet<string>();
+            DataTable dt = new DataTable();
+            logger.Info("query: " + query + " indexColumn: " + indexColumn + " connectionString: " + connectionString);
+
+            using (MySql.Data.MySqlClient.MySqlConnection dbCon = new MySql.Data.MySqlClient.MySqlConnection(connectionString))
+            {
+                dbCon.Open();
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
+                {
+                    using (MySql.Data.MySqlClient.MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (reader.GetString(indexColumn) != null && reader.GetString(indexColumn).Length > 0)
+                                list.Add(reader.GetString(indexColumn));
+                        }
+                    }
+                }
+                dbCon.Close();
+            }
+
+            dt = null;
+            return list;
         }
 
         private void GetTables_Click(object sender, EventArgs e)
-        { GetTablesDb(); }
+        {
+            comboBoxTables.Items.Clear();
+            GetTablesDb();
+        }
 
         private void GetTablesDb()
         {
@@ -280,64 +291,31 @@ namespace DBExplorer
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
             comboBoxServers.Enabled = false;
-            comboBoxDBs.Enabled = false;
+            //comboBoxDBs.Enabled = false;
 
-            comboBoxTables.Items.Clear();
             //string conn = DBAppIntellect.Properties.Settings.Default.intellectConnection;  // Native Connection
             //https://msdn.microsoft.com/ru-ru/library/system.data.sqlclient.sqlconnection.connectionstring(v=vs.110).aspx
             try
             {
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL" || ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
+                    connection = @"Data Source=" + ServerName;
+                    if (ServerType == "SQLEXPRESS")
+                    { connection += "\\SQLEXPRESS"; }
+                    connection += ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=20";
 
-                        dt = dbCon.GetSchema("Tables");
-                        foreach (DataRow row in dt.Rows)
-                        { list.Add(row["TABLE_NAME"].ToString()); }
-
-                        dbCon.Close();
-                    }
-                }
-                else if (ServerType == "SQLEXPRESS")
-                {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        dt = dbCon.GetSchema("Tables");
-                        foreach (DataRow row in dt.Rows)
-                        { list.Add(row["TABLE_NAME"].ToString()); }
-
-                        dbCon.Close();
-                    }
+                    list = GetSchemaMSSQLDB(connection, "Tables", "TABLE_NAME");
                 }
                 else if (ServerType == "MySQL")
                 {
                     connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";Connect Timeout=5";
                     string query = "SHOW TABLES";
-                    //string query = "SHOW TABLES from serverDB";
-                    using (MySql.Data.MySqlClient.MySqlConnection dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
-                    {
-                        dbCon.Open();
 
-                        using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
-                        {
-                            using (MySql.Data.MySqlClient.MySqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    if (reader.GetString(0) != null && reader.GetString(0).Length > 0)
-                                        list.Add(reader.GetString(0));
-                                }
-                            }
-                        }
-                        dbCon.Close();
-                    }
+                    list = GetSchemaMySqlDB(connection, query, 0);
                 }
+
+                comboBoxTables.Items.AddRange(list.ToArray());
+
                 logger.Info("Список таблиц c базы " + serverDB + " сервера " + ServerName + " успешно получены");
                 StatusLabel2.Text = "Список таблиц c базы " + serverDB + " сервера " + ServerName + " успешно получены";
             }
@@ -350,19 +328,20 @@ namespace DBExplorer
                   "\n-----------------------" + "\n" + expt.ToString());
             }
 
-            comboBoxTables.Items.AddRange(list.ToArray());
             comboBoxTables.SelectedIndex = 0;
         }
 
         private void GetColumns_Click(object sender, EventArgs e)
-        { GetColumnsDb(); }
+        {
+            comboBoxColumns.Items.Clear();
+            GetColumnsDb();
+        }
 
         private void GetColumnsDb()
         {
             comboBoxColumns.Enabled = true;
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
-            comboBoxColumns.Items.Clear();
 
             serverDbTable = comboBoxTables.SelectedItem.ToString();
             HashSet<string> list = new HashSet<string>();
@@ -373,66 +352,30 @@ namespace DBExplorer
 
             try
             {
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL" || ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
+                    connection = @"Data Source=" + ServerName;
+                    if (ServerType == "SQLEXPRESS")
+                    { connection += "\\SQLEXPRESS"; }
+                    connection += ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=20";
 
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        dt = dbCon.GetSchema("Columns", new[] { null, null, serverDbTable });
-                        foreach (DataRow row in dt.Rows)
-                        { list.Add(row["COLUMN_NAME"].ToString()); }
-
-                        dbCon.Close();
-                    }
-                }
-                else if (ServerType == "SQLEXPRESS")
-                {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
-                    StatusLabel2.Text = "Подключаюсь к серверу " + ServerName;
-
-                    using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        dt = dbCon.GetSchema("Columns", new[] { null, null, serverDbTable });
-                        foreach (DataRow row in dt.Rows)
-                        { list.Add(row["COLUMN_NAME"].ToString()); }
-
-                        dbCon.Close();
-                    }
+                    list = GetSchemaColumnsMSSQLDB(connection, serverDbTable);
                 }
                 else if (ServerType == "MySQL")
                 {
                     connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";Connect Timeout=5";
                     string query = "SHOW COLUMNS FROM " + serverDbTable;
-                    //string query = "SHOW TABLES from serverDB";
-                    using (MySql.Data.MySqlClient.MySqlConnection dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
-                    {
-                        dbCon.Open();
 
-                        using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
-                        {
-                            using (MySql.Data.MySqlClient.MySqlDataReader reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    if (reader.GetString(0) != null && reader.GetString(0).Length > 0)
-                                    { list.Add(reader.GetString(0)); }
-                                }
-                            }
-                        }
-                        dbCon.Close();
-                    }
+                    list = GetSchemaMySqlDB(connection, query, 0);
                 }
+
+                comboBoxColumns.Items.AddRange(list.ToArray());
+                comboBoxColumns.SelectedIndex = 0;
 
                 logger.Info("Список столбцов таблицы " + serverDbTable + " для базы " + serverDB + " сервера " + ServerName + " получен");
                 StatusLabel2.Text = "Список столбцов таблицы " + serverDbTable + " для базы " + serverDB + " сервера " + ServerName + " получен";
 
-                comboBoxColumns.Items.AddRange(list.ToArray());
-                comboBoxColumns.SelectedIndex = 0;
+                //  comboBoxColumns.SelectedIndex = 0;
             }
             catch (Exception expt)
             {
@@ -449,10 +392,9 @@ namespace DBExplorer
 
         private void GetInfoDb()
         {
-
             serverDbTableColumn = comboBoxColumns.SelectedItem.ToString();
             DataTable dt = new DataTable();
-            string txtbox = textBoxQuery.Text;
+            string txtbox = textBoxQuery.Text.Trim();
             string query = "";
 
             logger.Info("Запрашиваю данные таблицы " + serverDbTable + " базы " + serverDB + " сервера " + ServerName);
@@ -460,89 +402,82 @@ namespace DBExplorer
 
             try
             {
-                //Next string - work!!!!
-                //string conn = DBAppIntellect.Properties.Settings.Default.intellectConnection; //Native Connection
-                //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=xcvxcvx;Password=sdfsf;Connect Timeout=60";
-                //string conn = "Data Source=" + comboBox3.SelectedItem.ToString() + "\\SQLEXPRESS;Persist Security Info=True;User ID=sdsdfsdf;Password=ghghjgh;Connect Timeout=60";
-
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL" || ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    //connection
+                    connection = @"Data Source=" + ServerName;
+                    if (ServerType == "SQLEXPRESS")
+                    { connection += "\\SQLEXPRESS"; }
+                    connection += ";Initial Catalog=" + serverDB + UserWindowsAuthorization + "; User ID=" + UserLogin + ";Password=" + UserPassword + "; Connect Timeout=60"; //;Type System Version=SQL Server 2005 
 
-                    if (sortDirectionASC)
-                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
-                    else
-                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC"; }
+                    //query
+                    query = "SELECT TOP 100 * FROM " + serverDbTable;
+
+                    if (txtbox.Length > 0)
+                    { query += " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'"; }
+
+                    if (buttonSort.Text == "ASC")
+                    { query += " ORDER BY " + serverDbTableColumn + " ASC"; }
+                    else if (buttonSort.Text == "DESC")
+                    { query += " ORDER BY " + serverDbTableColumn + " DESC"; }
+
+                    //logger
+                    logger.Info("connection " + connection);
+                    logger.Info("query " + query);
 
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
                     textBox2.AppendText("\n");
 
+                    //get data
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
-
                         dbCon.Open();
                         using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
                         {
                             using (System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(cmd))
                             { da.Fill(dt); }
                         }
-                    }
-                }
-                else if (ServerType == "SQLEXPRESS")
-                {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
-
-                    if (sortDirectionASC)
-                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
-                    else
-                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC"; }
-
-                    textBox2.AppendText("\n");
-                    textBox2.AppendText("\nconn:" + connection);
-                    textBox2.AppendText("\nquery: " + query);
-                    textBox2.AppendText("\n");
-
-                    using (var dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
-                        using (var cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
-                        {
-                            using (var da = new System.Data.SqlClient.SqlDataAdapter(cmd))
-                            { da.Fill(dt); }
-                        }
-
                         dbCon.Close();
                     }
                 }
                 else if (ServerType == "MySQL")
                 {
+                    //connection
                     connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
 
-                    if (sortDirectionASC)
-                    { query = "SELECT * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC  LIMIT 100"; }
-                    else
-                    { query = "SELECT* FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC LIMIT 100"; }
+                    //query
+                    query = "SELECT * FROM " + serverDbTable;
+
+                    if (txtbox.Length > 0)
+                    { query += " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'"; }
+
+                    if (buttonSort.Text == "ASC")
+                    { query += " ORDER BY " + serverDbTableColumn + " ASC"; }
+                    else if (buttonSort.Text == "DESC")
+                    { query += " ORDER BY " + serverDbTableColumn + " DESC"; }
+
+                    query += " LIMIT 100";
+
+                    //logger
+                    logger.Info("connection " + connection);
+                    logger.Info("query " + query);
 
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
                     textBox2.AppendText("\n");
 
+                    //get data
                     using (var dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
                     {
                         dbCon.Open();
-
                         using (var cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
                         {
                             using (var da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                            {
-                                da.Fill(dt);
-                            }
+                            { da.Fill(dt); }
                         }
-
                         dbCon.Close();
                     }
                 }
@@ -566,7 +501,7 @@ namespace DBExplorer
         {
             serverDbTableColumn = comboBoxColumns.SelectedItem.ToString();
             DataTable dt = new DataTable();
-            string txtbox = textBoxQuery.Text;
+            string txtbox = textBoxQuery.Text.Trim();
             string query = "";
 
             logger.Info("Запрашиваю данные таблицы " + serverDbTable + " базы " + serverDB + " сервера " + ServerName);
@@ -574,88 +509,82 @@ namespace DBExplorer
 
             try
             {
-                //Next string - work!!!!
-                //string conn = DBAppIntellect.Properties.Settings.Default.intellectConnection; //Native Connection
-                //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=xcvxcvx;Password=sdfsf;Connect Timeout=60";
-                //string conn = "Data Source=" + comboBox3.SelectedItem.ToString() + "\\SQLEXPRESS;Persist Security Info=True;User ID=sdsdfsdf;Password=ghghjgh;Connect Timeout=60";
-
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL" || ServerType == "SQLEXPRESS")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
-                    if (sortDirectionASC)
-                    { query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
-                    else
-                    { query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC"; }
+                    //connection
+                    connection = @"Data Source=" + ServerName;
+                    if (ServerType == "SQLEXPRESS")
+                    { connection += "\\SQLEXPRESS"; }
+                    connection += ";Initial Catalog=" + serverDB + UserWindowsAuthorization + "; User ID=" + UserLogin + ";Password=" + UserPassword + "; Connect Timeout=30";  //;Type System Version=SQL Server 2005                    
+
+                    //query
+                    query = "SELECT TOP 5000 * FROM " + serverDbTable;
+
+                    if (txtbox.Length > 0)
+                    { query += " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'"; }
+
+                    if (buttonSort.Text == "ASC")
+                    { query += " ORDER BY " + serverDbTableColumn + " ASC"; }
+                    else if (buttonSort.Text == "DESC")
+                    { query += " ORDER BY " + serverDbTableColumn + " DESC"; }
+
+                    //logger
+                    logger.Info("connection " + connection);
+                    logger.Info("query " + query);
 
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
                     textBox2.AppendText("\n");
 
+                    //get data
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
-
                         dbCon.Open();
-                        using (System.Data.SqlClient.SqlCommand cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
-                        {
-                            using (System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(cmd))
-                            {
-                                da.Fill(dt);
-                            }
-                        }
-                    }
-                }
-                else if (ServerType == "SQLEXPRESS")
-                {
-                    connection = @"Data Source=" + ServerName + "\\SQLEXPRESS" + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
-                    if (sortDirectionASC)
-                    { query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
-                    else
-                    { query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC"; }
-                    textBox2.AppendText("\n");
-                    textBox2.AppendText("\nconn:" + connection);
-                    textBox2.AppendText("\nquery: " + query);
-                    textBox2.AppendText("\n");
-
-                    using (var dbCon = new System.Data.SqlClient.SqlConnection(connection))
-                    {
-                        dbCon.Open();
-
                         using (var cmd = new System.Data.SqlClient.SqlCommand(query, dbCon))
                         {
                             using (var da = new System.Data.SqlClient.SqlDataAdapter(cmd))
-                            {
-                                da.Fill(dt);
-                            }
+                            { da.Fill(dt); }
                         }
-
                         dbCon.Close();
                     }
                 }
                 else if (ServerType == "MySQL")
                 {
+                    //connection
                     connection = @"server=" + ServerName + ";User=" + UserLogin + ";Password=" + UserPassword + ";database=" + serverDB + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
-                    if (sortDirectionASC)
-                    { query = "SELECT * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC  LIMIT 10000"; }
-                    else
-                    { query = "SELECT* FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC LIMIT 10000"; }
+
+                    //query
+                    query = "SELECT * FROM " + serverDbTable;
+
+                    if (txtbox.Length > 0)
+                    { query += " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%'"; }
+
+                    if (buttonSort.Text == "ASC")
+                    { query += " ORDER BY " + serverDbTableColumn + " ASC"; }
+                    else if (buttonSort.Text == "DESC")
+                    { query += " ORDER BY " + serverDbTableColumn + " DESC"; }
+
+                    query += " LIMIT 5000";
+
+                    //logger
+                    logger.Info("connection " + connection);
+                    logger.Info("query " + query);
+
                     textBox2.AppendText("\n");
                     textBox2.AppendText("\nconn:" + connection);
                     textBox2.AppendText("\nquery: " + query);
                     textBox2.AppendText("\n");
 
+                    //get data
                     using (var dbCon = new MySql.Data.MySqlClient.MySqlConnection(connection))
                     {
                         dbCon.Open();
-
                         using (var cmd = new MySql.Data.MySqlClient.MySqlCommand(query, dbCon))
                         {
                             using (var da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                            {
-                                da.Fill(dt);
-                            }
+                            { da.Fill(dt); }
                         }
-
                         dbCon.Close();
                     }
                 }
@@ -679,6 +608,7 @@ namespace DBExplorer
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
 
+            comboBoxColumns.Items.Clear();
             GetColumnsDb();
         }
 
@@ -698,6 +628,7 @@ namespace DBExplorer
             GetRows.Enabled = false;
             StatusLabel2.Text = "Выбран " + ServerName;
 
+            comboBoxTables.Items.Clear();
             GetTablesDb();
         }
 
@@ -707,6 +638,7 @@ namespace DBExplorer
                 this.StatusLabel1.ForeColor = System.Drawing.Color.Red;
             else this.StatusLabel1.ForeColor = System.Drawing.Color.Black;
         }
+
         private void timer2_Tick(object sender, EventArgs e) //Change a Color of the Font on Status by the Timer
         {
             if (this.StatusLabel2.ForeColor == System.Drawing.Color.Black)
@@ -729,7 +661,6 @@ namespace DBExplorer
         private void ApplicationExit()
         { Application.Exit(); }
 
-
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         { Application.Exit(); }
 
@@ -742,7 +673,14 @@ namespace DBExplorer
         bool sortDirectionASC = true;
         private void buttonSort_Click(object sender, EventArgs e)
         {
-            if (sortDirectionASC)
+            if (sortDirectionASC && buttonSort.Text == "ASC")
+            {
+                buttonSort.Text = "Nothing";
+                toolTip1.SetToolTip(buttonSort, "Сортировка по упомлчанию");
+
+                buttonSort.BackColor = System.Drawing.SystemColors.Control;
+            }
+            else if (sortDirectionASC)
             {
                 buttonSort.Text = "DESC";
                 toolTip1.SetToolTip(buttonSort, "Сортировка по убыванию");
