@@ -1,4 +1,4 @@
-﻿namespace DBAppIntellect
+﻿namespace DBExplorer
 {
     partial class Form1
     {
@@ -43,6 +43,7 @@
             this.buttonAuthorize = new System.Windows.Forms.Button();
             this.buttonGetAllRows = new System.Windows.Forms.Button();
             this.buttonReset = new System.Windows.Forms.Button();
+            this.buttonSort = new System.Windows.Forms.Button();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.StatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -51,11 +52,8 @@
             this.StatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.comboBoxServers = new System.Windows.Forms.ComboBox();
             this.comboBoxDBs = new System.Windows.Forms.ComboBox();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.labelDebugger = new System.Windows.Forms.Label();
-            this.buttonSort = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -84,7 +82,7 @@
             this.buttonExit.Text = "Exit";
             this.toolTip1.SetToolTip(this.buttonExit, "Завершить работу с программой");
             this.buttonExit.UseVisualStyleBackColor = true;
-            this.buttonExit.Click += new System.EventHandler(this.buttonExit_Click);
+            this.buttonExit.Click += new System.EventHandler(this.ApplicationExit);
             // 
             // textBoxQuery
             // 
@@ -172,7 +170,7 @@
             this.buttonAbout.Text = "About";
             this.toolTip1.SetToolTip(this.buttonAbout, "О программе");
             this.buttonAbout.UseVisualStyleBackColor = true;
-            this.buttonAbout.Click += new System.EventHandler(this.button2_Click);
+            this.buttonAbout.Click += new System.EventHandler(this.AboutSoft);
             // 
             // buttonAuthorize
             // 
@@ -216,6 +214,20 @@
             this.buttonReset.UseVisualStyleBackColor = true;
             this.buttonReset.Click += new System.EventHandler(this.buttonReset_Click);
             // 
+            // buttonSort
+            // 
+            this.buttonSort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSort.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Gainsboro;
+            this.buttonSort.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonSort.Location = new System.Drawing.Point(843, 192);
+            this.buttonSort.Name = "buttonSort";
+            this.buttonSort.Size = new System.Drawing.Size(240, 23);
+            this.buttonSort.TabIndex = 20;
+            this.buttonSort.Text = "Data sorting direction in the table";
+            this.toolTip1.SetToolTip(this.buttonSort, "Изменить направление сортировки по выбранному столбцу");
+            this.buttonSort.UseVisualStyleBackColor = true;
+            this.buttonSort.Click += new System.EventHandler(this.buttonSort_Click);
+            // 
             // notifyIcon1
             // 
             this.notifyIcon1.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info;
@@ -253,7 +265,7 @@
             // SplitButton1
             // 
             this.SplitButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.SplitButton1.Image = global::DBAppIntellect.Properties.Resources.ryik;
+            this.SplitButton1.Image = global::DBExplorer.Properties.Resources.ryik;
             this.SplitButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.SplitButton1.Name = "SplitButton1";
             this.SplitButton1.Size = new System.Drawing.Size(36, 24);
@@ -288,16 +300,6 @@
             this.comboBoxDBs.Text = "База:";
             this.comboBoxDBs.SelectedIndexChanged += new System.EventHandler(this.comboBox4_SelectedIndexChanged);
             // 
-            // timer1
-            // 
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // timer2
-            // 
-            this.timer2.Interval = 500;
-            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
-            // 
             // textBox2
             // 
             this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -317,20 +319,6 @@
             this.labelDebugger.Size = new System.Drawing.Size(57, 13);
             this.labelDebugger.TabIndex = 17;
             this.labelDebugger.Text = "Debugger:";
-            // 
-            // buttonSort
-            // 
-            this.buttonSort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSort.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Gainsboro;
-            this.buttonSort.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSort.Location = new System.Drawing.Point(843, 192);
-            this.buttonSort.Name = "buttonSort";
-            this.buttonSort.Size = new System.Drawing.Size(240, 23);
-            this.buttonSort.TabIndex = 20;
-            this.buttonSort.Text = "Change the kind of Direction";
-            this.toolTip1.SetToolTip(this.buttonSort, "Изменить направление сортировки по выбранному столбцу");
-            this.buttonSort.UseVisualStyleBackColor = true;
-            this.buttonSort.Click += new System.EventHandler(this.buttonSort_Click);
             // 
             // Form1
             // 
@@ -382,12 +370,10 @@
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel StatusLabel1;
-        private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.ComboBox comboBoxServers;
         private System.Windows.Forms.ComboBox comboBoxDBs;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel StatusLabel2;
-        private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.Button buttonAbout;
         private System.Windows.Forms.Button buttonAuthorize;
         private System.Windows.Forms.TextBox textBox2;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DBAppIntellect
+namespace DBExplorer
 {
     static class Program
     {
@@ -20,6 +20,8 @@ namespace DBAppIntellect
         }
     }
 
+/*
+
     static class UserLogin
     {
         public static string Value { get; set; }
@@ -28,6 +30,6 @@ namespace DBAppIntellect
     static class UserPassword
     {
         public static string Value { get; set; }
-    }
+    }*/
 
 }

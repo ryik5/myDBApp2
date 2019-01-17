@@ -6,7 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 
 
-namespace DBAppIntellect
+namespace DBExplorer
 {
     public partial class Form1 : Form
     {
@@ -14,14 +14,17 @@ namespace DBAppIntellect
         //http://www.realcoding.net/article/view/2611
 
         private NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        private System.Diagnostics.FileVersionInfo myFileVersionInfo;
+        private System.Diagnostics.FileVersionInfo myFileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Application.ExecutablePath);
+
         private string strVersion;
+        private ContextMenu contextMenu1;
+
+        public string ServerName = "";
+        public string ServerType = "MSSQL";
 
         private string UserLogin = "";
         private string UserPassword = "";
         private string UserWindowsAuthorization = ";" + "Persist Security Info=True";
-        private string ServerName = "";
-        private string ServerType = "MSSQL";
         private string connection = "";
         private string serverDB = "";
         private string serverDbTable = "";
@@ -41,12 +44,33 @@ namespace DBAppIntellect
             logger.Error("Test error message");
             logger.Fatal("Test fatal message");
 
-            myFileVersionInfo = myFileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Application.ExecutablePath);
-            strVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            myFileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Application.ExecutablePath);
+            strVersion = myFileVersionInfo.Comments + " ver." + myFileVersionInfo.FileVersion + " " + myFileVersionInfo.LegalCopyright;
+            StatusLabel1.Text = myFileVersionInfo.ProductName + " ver." + myFileVersionInfo.FileVersion + " " + myFileVersionInfo.LegalCopyright;
+            StatusLabel1.Alignment = ToolStripItemAlignment.Right;
+            DBParameters.productName = myFileVersionInfo.ProductName;
+            contextMenu1 = new ContextMenu();  //Context Menu on notify Icon
+            notifyIcon1.ContextMenu = contextMenu1;
+            contextMenu1.MenuItems.Add("About", AboutSoft);
+            contextMenu1.MenuItems.Add("Exit", ApplicationExit);
+            notifyIcon1.Text = myFileVersionInfo.ProductName + "\nv." + myFileVersionInfo.FileVersion + "\n" + myFileVersionInfo.CompanyName;
+            this.Text = myFileVersionInfo.Comments;
+
             toolTip1.SetToolTip(textBoxQuery, "Введите параметр для фильтра выводимых данных");
-            StatusLabel1.Alignment = ToolStripItemAlignment.Right;
-            StatusLabel1.Text = myFileVersionInfo.Comments + " ver." + myFileVersionInfo.FileVersion + " b." + strVersion + " " + myFileVersionInfo.LegalCopyright;
-            StatusLabel1.Alignment = ToolStripItemAlignment.Right;
+
+
+            using (Microsoft.Win32.RegistryKey EvUserKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(DBParameters.myRegKey, Microsoft.Win32.RegistryKeyPermissionCheck.ReadSubTree, System.Security.AccessControl.RegistryRights.ReadKey))
+            {
+                try { DBParameters.ServerName = EvUserKey.GetValue("ServerName").ToString().Trim(); } catch { }
+                try { DBParameters.ServerType = EvUserKey.GetValue("ServerType").ToString().Trim(); } catch { }
+                try { DBParameters.UserLogin = EvUserKey.GetValue("UserLogin").ToString().Trim(); } catch { }
+            }
+
+            using (Microsoft.Win32.RegistryKey EvUserKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(DBParameters.myRegKey))
+            {
+                try { EvUserKey.SetValue("productName", DBParameters.productName, Microsoft.Win32.RegistryValueKind.String); } catch { }
+            }
 
             comboBoxTables.Enabled = false;
             buttonColumns.Enabled = false;
@@ -59,21 +83,17 @@ namespace DBAppIntellect
             toolTip1.SetToolTip(buttonSort, "Сортировка по возрастанию");
             sortDirectionASC = true;
 
-            string checkServerName = "";
-            string checkServerType = "";
             //The Start of The Block. for transfer any data between Form1 and Form2
             this.Hide();
-            Form2 f = new Form2(this);
-            f.buttonSave.Focus();
+            DBParameters.Inputed = false;
+
+            Form2 f = new Form2();
             f.ShowDialog();
             this.Show();
 
-            if (f.UserButtonOK)
+            if (DBParameters.Inputed)
             {
-                checkServerName = f.textBoxServerName.Text.Trim();
-                checkServerType = f.comboBoxTypeDB.Text.Trim();
-
-                if (f.checkBoxAuthorize.Checked)
+                if (DBParameters.CheckBoxAuthorize)
                 {
                     UserWindowsAuthorization = ";Integrated Sercurity = true";
                     UserLogin = null;
@@ -82,14 +102,14 @@ namespace DBAppIntellect
                 else
                 {
                     UserWindowsAuthorization = ";Persist Security Info=True";
-                    UserLogin = f.textBoxUserName.Text.Trim();
-                    UserPassword = f.textBoxPassword.Text.Trim();
+                    UserLogin = DBParameters.UserLogin;
+                    UserPassword = DBParameters.UserPassword;
                 }
 
-                if (checkServerName.Length > 3)
+                if (DBParameters.ServerName.Length > 0)
                 {
-                    ServerName = checkServerName;
-                    ServerType = checkServerType;
+                    ServerName = DBParameters.ServerName;
+                    ServerType = DBParameters.ServerType;
                     comboBoxServers.Items.Add(ServerName);
                     comboBoxServers.SelectedIndex = comboBoxServers.FindString(ServerName);
 
@@ -99,16 +119,22 @@ namespace DBAppIntellect
                     comboBoxColumns.Enabled = false;
                     textBoxQuery.Enabled = false;
                     GetRows.Enabled = false;
-                    timer1.Enabled = true; //Start Timer
-                    StatusLabel2.Text = "Выбран " + ServerName;
 
                     GetTablesDb();
+                }
+                logger.Info("Выбран " + ServerName);
+                StatusLabel2.Text = "Выбран " + ServerName;
 
-                    //ComboBoxServers_SelectedIndexChanged();
+                using (Microsoft.Win32.RegistryKey EvUserKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(DBParameters.myRegKey))
+                {
+                    try { EvUserKey.SetValue("ServerName", DBParameters.ServerName, Microsoft.Win32.RegistryValueKind.String); } catch { }
+                    try { EvUserKey.SetValue("ServerType", DBParameters.ServerType, Microsoft.Win32.RegistryValueKind.String); } catch { }
+                    try { EvUserKey.SetValue("UserLogin", DBParameters.UserLogin, Microsoft.Win32.RegistryValueKind.String); } catch { }
                 }
             }
             else
             {
+                logger.Info("Сервер не выбран");
                 StatusLabel2.Text = "Выберите сервер для получения данных";
             }
             //The End of The Block. for transfer any data between Form1 and Form2
@@ -120,17 +146,14 @@ namespace DBAppIntellect
             comboBoxServers.SelectedIndex = 0;
             comboBoxDBs.SelectedIndex = 0;
         }
-        
-        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
+
+        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)// ComboBoxServers_SelectedIndexChanged()
         { ComboBoxServers_SelectedIndexChanged(); }
 
         private void ComboBoxServers_SelectedIndexChanged()
         {
             HashSet<string> list = new HashSet<string>();
             DataTable dt = new DataTable();
-
-            //Start Timer //https://msdn.microsoft.com/ru-ru/library/system.data.sqlclient.sqlconnection.connectionstring(v=vs.110).aspx
-            timer2.Enabled = true;
 
             if (ServerName.Length == 0)
             { ServerName = comboBoxServers.Text; }
@@ -240,7 +263,7 @@ namespace DBAppIntellect
         }*/
 
         }
-        
+
         private void GetTables_Click(object sender, EventArgs e)
         { GetTablesDb(); }
 
@@ -264,7 +287,7 @@ namespace DBAppIntellect
             //https://msdn.microsoft.com/ru-ru/library/system.data.sqlclient.sqlconnection.connectionstring(v=vs.110).aspx
             try
             {
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
                 {
                     connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
@@ -350,9 +373,9 @@ namespace DBAppIntellect
 
             try
             {
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";Connect Timeout=60";
 
                     using (System.Data.SqlClient.SqlConnection dbCon = new System.Data.SqlClient.SqlConnection(connection))
                     {
@@ -426,7 +449,6 @@ namespace DBAppIntellect
 
         private void GetInfoDb()
         {
-            timer2.Enabled = true;
 
             serverDbTableColumn = comboBoxColumns.SelectedItem.ToString();
             DataTable dt = new DataTable();
@@ -443,12 +465,12 @@ namespace DBAppIntellect
                 //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=xcvxcvx;Password=sdfsf;Connect Timeout=60";
                 //string conn = "Data Source=" + comboBox3.SelectedItem.ToString() + "\\SQLEXPRESS;Persist Security Info=True;User ID=sdsdfsdf;Password=ghghjgh;Connect Timeout=60";
 
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
 
                     if (sortDirectionASC)
-                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by "+ serverDbTableColumn+" ASC"; }
+                    { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
                     else
                     { query = "SELECT TOP 100 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " DESC"; }
 
@@ -535,8 +557,6 @@ namespace DBAppIntellect
                 logger.Warn("Проверьте доступ к чтению данных таблицы: " + serverDbTable + ", " + ServerName + ", " + ServerType + ", Логин - " + UserLogin + ", Пароль - " + UserPassword);
                 MessageBox.Show(Expt.Message, comboBoxServers.SelectedItem.ToString() + " не доступен или неправильная авторизация", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            timer2.Enabled = false; //Stop Timer
         }
 
         private void buttonGettFullInfo_Click(object sender, EventArgs e)
@@ -544,8 +564,6 @@ namespace DBAppIntellect
 
         private void GetFullInfoDb()
         {
-            timer2.Enabled = true;
-
             serverDbTableColumn = comboBoxColumns.SelectedItem.ToString();
             DataTable dt = new DataTable();
             string txtbox = textBoxQuery.Text;
@@ -561,9 +579,9 @@ namespace DBAppIntellect
                 //string conn = "Data Source=KV-BASE\\SQLEXPRESS;Initial Catalog=intellect;Persist Security Info=True;User ID=xcvxcvx;Password=sdfsf;Connect Timeout=60";
                 //string conn = "Data Source=" + comboBox3.SelectedItem.ToString() + "\\SQLEXPRESS;Persist Security Info=True;User ID=sdsdfsdf;Password=ghghjgh;Connect Timeout=60";
 
-                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL2005")
+                if (ServerName.ToLower().Contains("po-sql-01") || ServerName.ToLower().Contains("tfactura") || ServerType == "MSSQL")
                 {
-                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + ";Type System Version=SQL Server 2005" + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
+                    connection = @"Data Source=" + ServerName + ";Initial Catalog=" + serverDB + UserWindowsAuthorization + ";User ID=" + UserLogin + ";Password=" + UserPassword + ";pooling = false; convert zero datetime=True; Connect Timeout=30";
                     if (sortDirectionASC)
                     { query = "SELECT TOP 10000 * FROM " + serverDbTable + " WHERE " + serverDbTableColumn + " LIKE '%" + txtbox + "%' order by " + serverDbTableColumn + " ASC"; }
                     else
@@ -652,8 +670,6 @@ namespace DBAppIntellect
                 logger.Warn("Проверьте доступ к чтению данных таблицы: " + serverDbTable + ", " + ServerName + ", " + ServerType + ", Логин - " + UserLogin + ", Пароль - " + UserPassword);
                 MessageBox.Show(Expt.Message, comboBoxServers.SelectedItem.ToString() + " не доступен или неправильная авторизация", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            timer2.Enabled = false; //Stop Timer
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -680,7 +696,6 @@ namespace DBAppIntellect
             comboBoxColumns.Enabled = false;
             textBoxQuery.Enabled = false;
             GetRows.Enabled = false;
-            timer1.Enabled = true; //Start Timer
             StatusLabel2.Text = "Выбран " + ServerName;
 
             GetTablesDb();
@@ -699,43 +714,24 @@ namespace DBAppIntellect
             else this.StatusLabel2.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void button2_Click(object sender, EventArgs e) //Кнопка "О программе"
+        private void AboutSoft(object sender, EventArgs e) //Кнопка "О программе"
+        { AboutSoft(); }
+
+        private void AboutSoft()
         {
-            DialogResult result = MessageBox.Show(
-                myFileVersionInfo.Comments + "\n\nВерсия: " + myFileVersionInfo.FileVersion + "\nBuild: " +
-                strVersion + "\n" + myFileVersionInfo.LegalCopyright + "\n" + "\nЛокальный ПК:\n" +
-                Environment.MachineName + "\n" +
-                Environment.OSVersion + "\n" +
-                Environment.WorkingSet,
-                "Информация о программе",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information,
-                MessageBoxDefaultButton.Button1,
-                MessageBoxOptions.DefaultDesktopOnly);
-            if (result == DialogResult.OK)
-                this.buttonAbout.BackColor = System.Drawing.Color.Khaki;
+            AboutBox1 aboutBox = new AboutBox1();
+            aboutBox.Show();
         }
 
-        private void Form1_HelpButtonClicked(object sender, CancelEventArgs e)
-        {
-            DialogResult result = MessageBox.Show(
-                "Инструмент для подключения к БД\nи nросмотра содержимого этих баз данных ",
-                "Информация о программе",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information,
-                MessageBoxDefaultButton.Button1,
-                MessageBoxOptions.DefaultDesktopOnly);
-        }
+        private void ApplicationExit(object sender, EventArgs e)
+        { ApplicationExit(); }
 
-        private void buttonExit_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
+        private void ApplicationExit()
+        { Application.Exit(); }
+
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            Application.Exit();
-        }
+        { Application.Exit(); }
 
         private void buttonReset_Click(object sender, EventArgs e)
         {
@@ -763,5 +759,17 @@ namespace DBAppIntellect
                 buttonSort.BackColor = System.Drawing.Color.PaleGreen;
             }
         }
+    }
+
+    public static class DBParameters
+    {
+        public static string productName = "";
+        public static string ServerName = "";
+        public static string ServerType = "";
+        public static string UserLogin = "";
+        public static string UserPassword = "";
+        public static bool CheckBoxAuthorize = false;
+        public static bool Inputed = false;
+        public static readonly string myRegKey = @"SOFTWARE\RYIK\DBExplorer";
     }
 }
